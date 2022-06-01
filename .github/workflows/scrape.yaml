@@ -31,6 +31,9 @@ jobs:
           export PATH="${PWD}:${PATH}"
           mv "Street Tree Data" street-tree-data.csv
           make split
+      - name: Save package metadata
+        run: |-
+          mv 6ac4569e-fd37-4cbc-ac63-db3624c5f6a2.json data/
       - name: Commit and push if it changed
         run: |-
           git config user.name "github-actions[bot]"
