@@ -1,0 +1,40 @@
+---
+name: Fetch latest data
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 5 * * *'
+
+jobs:
+  scheduled:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Download xsv
+        run: |-
+          echo "271e798160472830d7151673383afaba4c37209673f5157cf37e8f5e308f1cac  xsv" >SHA256SUM
+          wget https://github.com/BurntSushi/xsv/releases/download/0.13.0/xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
+          tar -xvf *.tar.gz
+          sha256sum -c SHA256SUM
+      - name: Fetch latest data
+        uses: benwebber/get-ckan-package@v1
+        with:
+          url: https://ckan0.cf.opendata.inter.prod-toronto.ca/
+          package_id: 6ac4569e-fd37-4cbc-ac63-db3624c5f6a2
+          resource_ids: '["3dafa392-c6ab-4f37-9bf9-21ddf7308eaf"]'
+      - name: Split data
+        run: |-
+          export PATH="${PWD}:${PATH}"
+          mv "Street Tree Data" street-tree-data.csv
+          make split
+      - name: Commit and push if it changed
+        run: |-
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m 'Update street tree data' || exit
+          git push
